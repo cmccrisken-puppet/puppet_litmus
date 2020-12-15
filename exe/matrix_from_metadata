@@ -43,9 +43,10 @@ COLLECTION_TABLE = {
 
 matrix = {
   platform: [],
-  collection: [],
-  spec_test_matrix: []
+  collection: []
 }
+
+spec_matrix = []
 
 metadata = JSON.parse(File.read('metadata.json'))
 # Set platforms based on declared operating system support
@@ -81,7 +82,7 @@ if metadata.key?('requirements') && metadata['requirements'].length.positive?
     COLLECTION_TABLE.each do |key, val|
       if Gem::Requirement.create(reqs).satisfied_by?(Gem::Version.new(key))
         matrix[:collection] << val['collection']
-        matrix[:spec_test_matrix] << { puppet_version: key, ruby_version: "~> #{val[:ruby_ver]}" }
+        spec_matrix << { puppet_version: key, ruby_version: "~> #{val[:ruby_ver]}" }
       end
     end
   end
@@ -95,7 +96,9 @@ end
 # Just to make sure there aren't any duplicates
 matrix[:platform] = matrix[:platform].uniq.sort
 matrix[:collection] = matrix[:collection].uniq.sort
+spec_matrix = spec_matrix.uniq.sort
 
 puts "::set-output name=matrix::#{JSON.generate(matrix)}"
+puts "::set-output name=spec_matrix::#{JSON.generate{spec_matrix}}"
 
 puts "Created matrix with #{matrix[:platform].length * matrix[:collection].length} cells."
